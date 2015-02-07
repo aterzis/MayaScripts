@@ -1,0 +1,681 @@
+// SET UP ALFRED FOR MOTION BUILDER MOCAPPING
+// MELHACK BY DANIEL SCOTT
+// RIG BY © Rodri Torres 2006 (http://rodri.aniguild.com)
+
+// CREATE and ASSIGN TO LAYERS
+
+// NOTES: Ensure Alfred is in the T-POSE !!!
+
+createDisplayLayer -name "mocap_rig" -number 1 -empty;
+setAttr mocap_rig.visibility 1; setAttr mocap_rig.displayType 0; setAttr mocap_rig.color 18;
+editDisplayLayerMembers -noRecurse mocap_rig `ls -selection`;
+
+// Master_MOCAP_Node
+
+circle -ch on -o on -nr 0 1 0 -r 10 -name Master_MOCAP_Node ;
+
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -cl  ;
+select -r Master_MOCAP_Node ;
+editDisplayLayerMembers -noRecurse mocap_rig `ls -selection`;
+
+// ZERO OUT ALFRED'S SHOULDERS & HEAD
+
+setAttr "Right_ArmFk_CTRL.rotateX" 0;
+setAttr "Left_ArmFk_CTRL.rotateX" 0;
+setAttr "right_Shoulder_CTR.armWorldOrient" 0;
+setAttr "left_shoulder_CTR.armWorldOrient" 0;
+setAttr "lockHead_CTRL.lockHead" 0;
+
+// MAKE MOCAP JOINTS FOR MOTION BUILDER
+
+select -cl  ;
+
+// MAKE JOINTS
+
+joint -p 0 0 0 -name mocap_Hips;
+joint -p 0 2 0 -name mocap_Spine;
+joint -p 0 4 0 -name mocap_Spine1;
+joint -p 0 6 0 -name mocap_Spine2;
+joint -p 0 6 0 -name mocap_Chest;
+joint -p 0 8 0 -name mocap_Neck;
+joint -p 0 14 0 -name mocap_Head;
+joint -p 0 14 0 -name mocap_HeadMid;
+joint -p 0 14 0 -name mocap_HeadHigher;
+
+select -cl ;
+
+joint -p 0 0 0 -name mocap_Hip;
+
+select -cl ;
+
+joint -p 1 5 0 -name mocap_LeftShoulder;
+joint -p 2 6 0 -name mocap_LeftArm;
+joint -p 3 6 0 -name mocap_LeftForeArm;
+joint -p 4 6 0 -name mocap_LeftHand;
+
+select -cl ;
+
+joint -p 1 -1 0 -name mocap_LeftUpLeg;
+joint -p 2 -2 0 -name mocap_LeftLeg;
+joint -p 2 -3 0 -name mocap_LeftFoot;
+joint -p 2 -4 0 -name mocap_LeftToeBase;
+
+select - cl ;
+
+joint -p -1 5 0 -name mocap_RightShoulder;
+joint -p -2 6 0 -name mocap_RightArm;
+joint -p -3 6 0 -name mocap_RightForeArm;
+joint -p -4 6 0 -name mocap_RightHand;
+
+select - cl ;
+
+joint -p -1 -1 0 -name mocap_RightUpLeg;
+joint -p -2 -2 0 -name mocap_RightLeg;
+joint -p -2 -3 0 -name mocap_RightFoot;
+joint -p -2 -4 0 -name mocap_RightToeBase;
+
+select - cl ;
+
+select -r mocap_LeftShoulder ;
+select -tgl mocap_Chest ;
+parent;
+select -cl  ;
+
+select -r mocap_RightShoulder ;
+select -tgl mocap_Chest ;
+parent;
+select -cl  ;
+
+select -r mocap_LeftUpLeg ;
+select -tgl mocap_Hip ;
+parent;
+select -cl  ;
+
+select -r mocap_RightUpLeg ;
+select -tgl mocap_Hip ;
+parent;
+select -cl  ;
+
+select -r mocap_Hip ;
+select -add mocap_Hips ;
+parent;
+
+select -r mocap_Hips ;
+select -add Master_MOCAP_Node ;
+parent;
+
+//
+// SNAP JOINTS TO CTRLs - SPINE
+//
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("root_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_Hips.scalePivot") ("mocap_Hips.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro root_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_Hips;
+
+select -r mocap_Hips ;
+select -tgl root_CTRL ;
+
+pointConstraint -offset 0 0 0 -weight 1;
+
+connectAttr -f mocap_Hips.rotateX root_CTRL.rotateX;
+connectAttr -f mocap_Hips.rotateY root_CTRL.rotateY;
+connectAttr -f mocap_Hips.rotateZ root_CTRL.rotateZ;
+
+// Hip joint ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("hip")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_Hip.scalePivot") ("mocap_Hip.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro hip`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_Hip;
+
+select -r mocap_Hip ;
+select -tgl hip ;
+
+connectAttr -f mocap_Hip.rotateX hip.rotateX;
+connectAttr -f mocap_Hip.rotateY hip.rotateY;
+connectAttr -f mocap_Hip.rotateZ hip.rotateZ;
+
+// spineLower_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("spineLower_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_Spine.scalePivot") ("mocap_Spine.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro spineLower_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_Spine;
+
+select -r mocap_Spine ;
+select -tgl spineLower_CTRL ;
+
+connectAttr -f mocap_Spine.rotateX spineLower_CTRL.rotateX;
+connectAttr -f mocap_Spine.rotateY spineLower_CTRL.rotateY;
+connectAttr -f mocap_Spine.rotateZ spineLower_CTRL.rotateZ;
+
+// spineMid_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("spineMid_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_Spine1.scalePivot") ("mocap_Spine1.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro spineMid_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_Spine1;
+
+select -r mocap_Spine1 ;
+select -tgl spineMid_CTRL ;
+
+connectAttr -f mocap_Spine1.rotateX spineMid_CTRL.rotateX;
+connectAttr -f mocap_Spine1.rotateY spineMid_CTRL.rotateY;
+connectAttr -f mocap_Spine1.rotateZ spineMid_CTRL.rotateZ;
+
+// spineHigher_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("spineHigher_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_Spine2.scalePivot") ("mocap_Spine2.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro spineHigher_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_Spine2;
+
+select -r mocap_Spine2 ;
+select -tgl spineHigher_CTRL ;
+
+connectAttr -f mocap_Spine2.rotateX spineHigher_CTRL.rotateX;
+connectAttr -f mocap_Spine2.rotateY spineHigher_CTRL.rotateY;
+connectAttr -f mocap_Spine2.rotateZ spineHigher_CTRL.rotateZ;
+
+// Chest ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("chest")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_Chest.scalePivot") ("mocap_Chest.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro chest`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_Chest;
+
+select -r mocap_Chest ;
+select -tgl chest ;
+
+connectAttr -f mocap_Chest.rotateX chest.rotateX;
+connectAttr -f mocap_Chest.rotateY chest.rotateY;
+connectAttr -f mocap_Chest.rotateZ chest.rotateZ;
+
+// neck_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("neck_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_Neck.scalePivot") ("mocap_Neck.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro neck_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_Neck;
+
+select -r mocap_Neck ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_Neck ;
+select -tgl neck_CTRL ;
+
+connectAttr -f mocap_Neck.rotateX neck_CTRL.rotateX;
+connectAttr -f mocap_Neck.rotateY neck_CTRL.rotateY;
+connectAttr -f mocap_Neck.rotateZ neck_CTRL.rotateZ;
+
+// lockHead_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("lockHead_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_Head.scalePivot") ("mocap_Head.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro lockHead_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_Head;
+
+select -r mocap_Head ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_Head ;
+select -tgl lockHead_CTRL ;
+
+connectAttr -f mocap_Head.rotateX lockHead_CTRL.rotateX;
+connectAttr -f mocap_Head.rotateY lockHead_CTRL.rotateY;
+connectAttr -f mocap_Head.rotateZ lockHead_CTRL.rotateZ;
+
+// headMid ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("headMid")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_HeadMid.scalePivot") ("mocap_HeadMid.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro headMid`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_HeadMid;
+
+select -r mocap_HeadMid ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_HeadMid ;
+select -tgl headMid ;
+
+connectAttr -f mocap_HeadMid.rotateX headMid.rotateX;
+connectAttr -f mocap_HeadMid.rotateY headMid.rotateY;
+connectAttr -f mocap_HeadMid.rotateZ headMid.rotateZ;
+
+// headHigher ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("headHigher")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_HeadHigher.scalePivot") ("mocap_HeadHigher.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro headHigher`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_HeadHigher;
+
+select -r mocap_HeadHigher ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_HeadHigher ;
+select -tgl headHigher ;
+
+connectAttr -f mocap_HeadHigher.rotateX headHigher.rotateX;
+connectAttr -f mocap_HeadHigher.rotateY headHigher.rotateY;
+connectAttr -f mocap_HeadHigher.rotateZ headHigher.rotateZ;
+
+//
+// LEFT SIDE
+//
+
+// Left_Shoulder_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Left_Shoulder_pointConstraint1")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_LeftShoulder.scalePivot") ("mocap_LeftShoulder.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Left_Shoulder_pointConstraint1`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_LeftShoulder;
+
+select -r mocap_LeftShoulder ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_LeftShoulder ;
+select -tgl Left_Shoulder ;
+
+connectAttr -f mocap_LeftShoulder.rotateX Left_Shoulder.rotateX;
+connectAttr -f mocap_LeftShoulder.rotateY Left_Shoulder.rotateY;
+connectAttr -f mocap_LeftShoulder.rotateZ Left_Shoulder.rotateZ;
+
+// Left_ArmFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Left_ArmFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_LeftArm.scalePivot") ("mocap_LeftArm.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Left_ArmFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_LeftArm;
+
+select -r mocap_LeftArm ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_LeftArm ;
+select -tgl Left_ArmFk_CTRL ;
+
+connectAttr -f mocap_LeftArm.rotateX Left_ArmFk_CTRL.rotateX;
+connectAttr -f mocap_LeftArm.rotateY Left_ArmFk_CTRL.rotateY;
+connectAttr -f mocap_LeftArm.rotateZ Left_ArmFk_CTRL.rotateZ;
+
+// Left_ElbowFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Left_ElbowFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_LeftForeArm.scalePivot") ("mocap_LeftForeArm.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Left_ElbowFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_LeftForeArm;
+
+select -cl  ;
+select -r Left_ElbowFk_CTRL ;
+setAttr -k on |placement|esqueleto|Left_ArmParentGroup|Left_ArmGroup|Left_ArmGroupFk|Left_ArmFk|Left_ElbowFk_CTRLgroup|Left_ElbowFk_CTRL.rotateX;
+setAttr -k on |placement|esqueleto|Left_ArmParentGroup|Left_ArmGroup|Left_ArmGroupFk|Left_ArmFk|Left_ElbowFk_CTRLgroup|Left_ElbowFk_CTRL.rotateY;
+setAttr -l off |placement|esqueleto|Left_ArmParentGroup|Left_ArmGroup|Left_ArmGroupFk|Left_ArmFk|Left_ElbowFk_CTRLgroup|Left_ElbowFk_CTRL.rotateX;
+setAttr -l off |placement|esqueleto|Left_ArmParentGroup|Left_ArmGroup|Left_ArmGroupFk|Left_ArmFk|Left_ElbowFk_CTRLgroup|Left_ElbowFk_CTRL.rotateY;
+select -cl ;
+
+select -r mocap_LeftForeArm ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_LeftForeArm ;
+select -tgl Left_ElbowFk_CTRL ;
+
+connectAttr -f mocap_LeftForeArm.rotateX Left_ElbowFk_CTRL.rotateX;
+connectAttr -f mocap_LeftForeArm.rotateY Left_ElbowFk_CTRL.rotateY;
+connectAttr -f mocap_LeftForeArm.rotateZ Left_ElbowFk_CTRL.rotateZ;
+
+// Left_WristFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Left_WristFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_LeftHand.scalePivot") ("mocap_LeftHand.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Left_WristFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_LeftHand;
+
+select -r mocap_LeftHand ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_LeftHand ;
+select -tgl Left_WristFk_CTRL ;
+
+connectAttr -f mocap_LeftHand.rotateX Left_WristFk_CTRL.rotateX;
+connectAttr -f mocap_LeftHand.rotateY Left_WristFk_CTRL.rotateY;
+connectAttr -f mocap_LeftHand.rotateZ Left_WristFk_CTRL.rotateZ;
+
+// SET Left LEG TO FK
+
+setAttr "Left_LegFkIk_CTRL.fkIk" 0;
+select -cl  ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Left_LegFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_LeftUpLeg.scalePivot") ("mocap_LeftUpLeg.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Left_LegFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_LeftUpLeg;
+
+select -r mocap_LeftUpLeg ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_LeftUpLeg ;
+select -tgl Left_LegFk_CTRL ;
+
+connectAttr -f mocap_LeftUpLeg.rotateX Left_LegFk_CTRL.rotateX;
+connectAttr -f mocap_LeftUpLeg.rotateY Left_LegFk_CTRL.rotateY;
+connectAttr -f mocap_LeftUpLeg.rotateZ Left_LegFk_CTRL.rotateZ;
+
+// Left_KneeFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Left_KneeFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_LeftLeg.scalePivot") ("mocap_LeftLeg.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Left_KneeFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_LeftLeg;
+
+select -cl  ;
+select -r Left_KneeFk_CTRL ;
+setAttr -k on |placement|esqueleto|root|hip|Left_LegGroupFk|Left_LegFk|Left_KneeFk_CTRLgroup|Left_KneeFk_CTRL.rotateY;
+setAttr -k on |placement|esqueleto|root|hip|Left_LegGroupFk|Left_LegFk|Left_KneeFk_CTRLgroup|Left_KneeFk_CTRL.rotateZ;
+setAttr -l off |placement|esqueleto|root|hip|Left_LegGroupFk|Left_LegFk|Left_KneeFk_CTRLgroup|Left_KneeFk_CTRL.rotateY;
+setAttr -l off |placement|esqueleto|root|hip|Left_LegGroupFk|Left_LegFk|Left_KneeFk_CTRLgroup|Left_KneeFk_CTRL.rotateZ;
+select -cl ;
+
+select -r mocap_LeftLeg ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_LeftLeg ;
+select -tgl Left_KneeFk_CTRL ;
+
+connectAttr -f mocap_LeftLeg.rotateX Left_KneeFk_CTRL.rotateX;
+connectAttr -f mocap_LeftLeg.rotateY Left_KneeFk_CTRL.rotateY;
+connectAttr -f mocap_LeftLeg.rotateZ Left_KneeFk_CTRL.rotateZ;
+
+// Left_AnkleFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Left_AnkleFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_LeftFoot.scalePivot") ("mocap_LeftFoot.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Left_AnkleFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_LeftFoot;
+
+select -r mocap_LeftFoot ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_LeftFoot ;
+select -tgl Left_AnkleFk_CTRL ;
+
+connectAttr -f mocap_LeftFoot.rotateX Left_AnkleFk_CTRL.rotateX;
+connectAttr -f mocap_LeftFoot.rotateY Left_AnkleFk_CTRL.rotateY;
+connectAttr -f mocap_LeftFoot.rotateZ Left_AnkleFk_CTRL.rotateZ;
+
+// Left_FingersFK_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Left_FingersFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_LeftToeBase.scalePivot") ("mocap_LeftToeBase.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Left_FingersFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_LeftToeBase;
+
+select -cl  ;
+select -r Left_FingersFk_CTRL ;
+setAttr -k on |placement|esqueleto|root|hip|Left_LegGroupFk|Left_LegFk|Left_KneeFk|Left_AnkleFk|Left_FingersFk_CTRLgroup|Left_FingersFk_CTRL.rotateY;
+setAttr -k on |placement|esqueleto|root|hip|Left_LegGroupFk|Left_LegFk|Left_KneeFk|Left_AnkleFk|Left_FingersFk_CTRLgroup|Left_FingersFk_CTRL.rotateZ;
+setAttr -l off |placement|esqueleto|root|hip|Left_LegGroupFk|Left_LegFk|Left_KneeFk|Left_AnkleFk|Left_FingersFk_CTRLgroup|Left_FingersFk_CTRL.rotateY;
+setAttr -l off |placement|esqueleto|root|hip|Left_LegGroupFk|Left_LegFk|Left_KneeFk|Left_AnkleFk|Left_FingersFk_CTRLgroup|Left_FingersFk_CTRL.rotateZ;
+select -cl ;
+
+select -r mocap_LeftToeBase ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_LeftToeBase ;
+select -tgl Left_FingersFk_CTRL ;
+
+connectAttr -f mocap_LeftToeBase.rotateX Left_FingersFk_CTRL.rotateX;
+connectAttr -f mocap_LeftToeBase.rotateY Left_FingersFk_CTRL.rotateY;
+connectAttr -f mocap_LeftToeBase.rotateZ Left_FingersFk_CTRL.rotateZ;
+
+//
+// RIGHT SIDE
+//
+
+// Right_Shoulder_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Right_Shoulder_pointConstraint1")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_RightShoulder.scalePivot") ("mocap_RightShoulder.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Right_Shoulder_pointConstraint1`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_RightShoulder;
+
+select -r mocap_RightShoulder ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_RightShoulder ;
+select -tgl right_Shoulder_CTR ;
+
+connectAttr -f mocap_RightShoulder.rotateX Right_Shoulder.rotateX;
+connectAttr -f mocap_RightShoulder.rotateY Right_Shoulder.rotateY;
+connectAttr -f mocap_RightShoulder.rotateZ Right_Shoulder.rotateZ;
+
+// Right_ArmFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Right_ArmFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_RightArm.scalePivot") ("mocap_RightArm.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Right_ArmFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_RightArm;
+
+select -r mocap_RightArm ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_RightArm ;
+select -tgl Right_ArmFk_CTRL ;
+
+connectAttr -f mocap_RightArm.rotateX Right_ArmFk_CTRL.rotateX;
+connectAttr -f mocap_RightArm.rotateY Right_ArmFk_CTRL.rotateY;
+connectAttr -f mocap_RightArm.rotateZ Right_ArmFk_CTRL.rotateZ;
+
+// Right_ElbowFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Right_ElbowFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_RightForeArm.scalePivot") ("mocap_RightForeArm.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Right_ElbowFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_RightForeArm;
+
+select -cl  ;
+select -r Right_ElbowFk_CTRL ;
+setAttr -k on |placement|esqueleto|Right_ArmParentGroup|Right_ArmGroup|Right_ArmGroupFk|Right_ArmFk|Right_ElbowFk_CTRLgroup|Right_ElbowFk_CTRL.rotateX;
+setAttr -k on |placement|esqueleto|Right_ArmParentGroup|Right_ArmGroup|Right_ArmGroupFk|Right_ArmFk|Right_ElbowFk_CTRLgroup|Right_ElbowFk_CTRL.rotateY;
+setAttr -l off |placement|esqueleto|Right_ArmParentGroup|Right_ArmGroup|Right_ArmGroupFk|Right_ArmFk|Right_ElbowFk_CTRLgroup|Right_ElbowFk_CTRL.rotateX;
+setAttr -l off |placement|esqueleto|Right_ArmParentGroup|Right_ArmGroup|Right_ArmGroupFk|Right_ArmFk|Right_ElbowFk_CTRLgroup|Right_ElbowFk_CTRL.rotateY;
+select -cl ;
+
+select -r mocap_RightForeArm ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_RightForeArm ;
+select -tgl Right_ElbowFk_CTRL ;
+
+connectAttr -f mocap_RightForeArm.rotateX Right_ElbowFk_CTRL.rotateX;
+connectAttr -f mocap_RightForeArm.rotateY Right_ElbowFk_CTRL.rotateY;
+connectAttr -f mocap_RightForeArm.rotateZ Right_ElbowFk_CTRL.rotateZ;
+
+// Right_WristFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Right_WristFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_RightHand.scalePivot") ("mocap_RightHand.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Right_WristFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_RightHand;
+
+select -r mocap_RightHand ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_RightHand ;
+select -tgl Right_WristFk_CTRL ;
+
+connectAttr -f mocap_RightHand.rotateX Right_WristFk_CTRL.rotateX;
+connectAttr -f mocap_RightHand.rotateY Right_WristFk_CTRL.rotateY;
+connectAttr -f mocap_RightHand.rotateZ Right_WristFk_CTRL.rotateZ;
+
+// SET Right LEG TO FK
+
+setAttr "Right_LegFkIk_CTRL.fkIk" 0;
+select -cl  ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Right_LegFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_RightUpLeg.scalePivot") ("mocap_RightUpLeg.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Right_LegFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_RightUpLeg;
+
+select -r mocap_RightUpLeg ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_RightUpLeg ;
+select -tgl Right_LegFk_CTRL ;
+
+connectAttr -f mocap_RightUpLeg.rotateX Right_LegFk_CTRL.rotateX;
+connectAttr -f mocap_RightUpLeg.rotateY Right_LegFk_CTRL.rotateY;
+connectAttr -f mocap_RightUpLeg.rotateZ Right_LegFk_CTRL.rotateZ;
+
+// Right_KneeFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Right_KneeFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_RightLeg.scalePivot") ("mocap_RightLeg.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Right_KneeFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_RightLeg;
+
+select -cl  ;
+select -r Right_KneeFk_CTRL ;
+setAttr -k on |placement|esqueleto|root|hip|Right_LegGroupFk|Right_LegFk|Right_KneeFk_CTRLgroup|Right_KneeFk_CTRL.rotateY;
+setAttr -k on |placement|esqueleto|root|hip|Right_LegGroupFk|Right_LegFk|Right_KneeFk_CTRLgroup|Right_KneeFk_CTRL.rotateZ;
+setAttr -l off |placement|esqueleto|root|hip|Right_LegGroupFk|Right_LegFk|Right_KneeFk_CTRLgroup|Right_KneeFk_CTRL.rotateY;
+setAttr -l off |placement|esqueleto|root|hip|Right_LegGroupFk|Right_LegFk|Right_KneeFk_CTRLgroup|Right_KneeFk_CTRL.rotateZ;
+select -cl ;
+
+select -r mocap_RightLeg ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_RightLeg ;
+select -tgl Right_KneeFk_CTRL ;
+
+connectAttr -f mocap_RightLeg.rotateX Right_KneeFk_CTRL.rotateX;
+connectAttr -f mocap_RightLeg.rotateY Right_KneeFk_CTRL.rotateY;
+connectAttr -f mocap_RightLeg.rotateZ Right_KneeFk_CTRL.rotateZ;
+
+// Right_AnkleFk_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Right_AnkleFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_RightFoot.scalePivot") ("mocap_RightFoot.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Right_AnkleFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_RightFoot;
+
+select -r mocap_RightFoot ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_RightFoot ;
+select -tgl Right_AnkleFk_CTRL ;
+
+connectAttr -f mocap_RightFoot.rotateX Right_AnkleFk_CTRL.rotateX;
+connectAttr -f mocap_RightFoot.rotateY Right_AnkleFk_CTRL.rotateY;
+connectAttr -f mocap_RightFoot.rotateZ Right_AnkleFk_CTRL.rotateZ;
+
+// Right_FingersFK_CTRL ;
+
+$worldSpaceOfJoint= `xform -q -ws -rp ("Right_FingersFk_CTRL")`;
+move -a $worldSpaceOfJoint[0] $worldSpaceOfJoint[1] $worldSpaceOfJoint[2] ("mocap_RightToeBase.scalePivot") ("mocap_RightToeBase.rotatePivot") ;
+
+float $jointRot[] = `xform -query -ws -ro Right_FingersFk_CTRL`;
+xform -ws -ro $jointRot[0] $jointRot[1] $jointRot[2] mocap_RightToeBase;
+
+select -cl  ;
+select -r Right_FingersFk_CTRL ;
+setAttr -k on |placement|esqueleto|root|hip|Right_LegGroupFk|Right_LegFk|Right_KneeFk|Right_AnkleFk|Right_FingersFk_CTRLgroup|Right_FingersFk_CTRL.rotateY;
+setAttr -k on |placement|esqueleto|root|hip|Right_LegGroupFk|Right_LegFk|Right_KneeFk|Right_AnkleFk|Right_FingersFk_CTRLgroup|Right_FingersFk_CTRL.rotateZ;
+setAttr -l off |placement|esqueleto|root|hip|Right_LegGroupFk|Right_LegFk|Right_KneeFk|Right_AnkleFk|Right_FingersFk_CTRLgroup|Right_FingersFk_CTRL.rotateY;
+setAttr -l off |placement|esqueleto|root|hip|Right_LegGroupFk|Right_LegFk|Right_KneeFk|Right_AnkleFk|Right_FingersFk_CTRLgroup|Right_FingersFk_CTRL.rotateZ;
+select -cl ;
+
+select -r mocap_RightToeBase ;
+makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+
+select -r mocap_RightToeBase ;
+select -tgl Right_FingersFk_CTRL ;
+
+connectAttr -f mocap_RightToeBase.rotateX Right_FingersFk_CTRL.rotateX;
+connectAttr -f mocap_RightToeBase.rotateY Right_FingersFk_CTRL.rotateY;
+connectAttr -f mocap_RightToeBase.rotateZ Right_FingersFk_CTRL.rotateZ;
+
+//
+// END OF LEFT AND RIGHT SIDE
+//
+
+// SET ROT ORDER
+
+setAttr mocap_LeftUpLeg.rotateOrder 1;
+setAttr mocap_LeftLeg.rotateOrder 1;
+setAttr mocap_LeftFoot.rotateOrder 3;
+setAttr mocap_LeftToeBase.rotateOrder 1;
+
+setAttr mocap_RightUpLeg.rotateOrder 1;
+setAttr mocap_RightLeg.rotateOrder 1;
+setAttr mocap_RightFoot.rotateOrder 3;
+setAttr mocap_RightToeBase.rotateOrder 1;
+
+// CONNECT ELBOWS AND KNEES IN ALL ROTATIONAL AXIS
+
+connectAttr -force Left_Elbow.rotateX Left_ElbowOriginal.rotateX;
+connectAttr -force Left_Elbow.rotateY Left_ElbowOriginal.rotateY;
+
+connectAttr -force Right_Elbow.rotateX Right_ElbowOriginal.rotateX;
+connectAttr -force Right_Elbow.rotateY Right_ElbowOriginal.rotateY;
+
+// DUPLICATE MESH
+
+select -cl ;
+
+select -r oreja_der_geo ;
+select -add oreja_izq_geo ;
+select -add BS_setup_01_cabeza_geo ;
+select -add BS_setup_01_pelo_geo ;
+select -add BS_setup_01_mano_der_geo1 ;
+select -add BS_setup_01_mano_der_geo ;
+select -add BS_setup_01_pie_izq_geo ;
+select -add BS_setup_01_pie_der_geo ;
+select -add BS_setup_01_cuerpo_geo ;
+
+duplicate -rr;
+
+polyUnite -name mocap_mesh;
+
+// APPLY LAMBERT - THEN EXPORT CONSTRAINTS
+
+select -cl  ;
+select -r mocap_mesh ;
+sets -e -forceElement initialShadingGroup;
+
+// CONSTRAIN ROOT_CTRL TO MOCAP_HIPS
+
+select -cl  ;
+select -r mocap_Hips ;
+select -add root_CTRL ;
+pointConstraint -offset 0 0 0 -weight 1;
+
+// PRINT RESULT
+print ("CONGRATS, RIGGED FOR MOCAP ... Now Delete Mesh History & Smooth Skin.");
